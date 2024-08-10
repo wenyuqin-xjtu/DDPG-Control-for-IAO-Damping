@@ -16,6 +16,11 @@ from torch.nn.parameter import Parameter
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
+import torch
+import matplotlib.pyplot as plt
+import networkx as nx
+from node2vec import Node2Vec
+from operator import itemgetter
 
 # 更改这个变量 自动创建 ./image/1101_1/ 文件夹
 os.environ["CUDA_VISIBLE_DEVICES"]= "2"
@@ -160,15 +165,6 @@ def ocs_cal(theta, w):
     return osc
 
 
-import torch
-import matplotlib.pyplot as plt
-import networkx as nx
-import pandas as pd
-import numpy as np
-from node2vec import Node2Vec
-from operator import itemgetter
-
-
 def get_X():
     df = pd.read_csv('./data/data1.csv')
     res = df.values.tolist()
@@ -181,13 +177,13 @@ def get_X():
     node2vec = Node2Vec(G, 
                         dimensions=16,  # 嵌入维度
                         p=4,            # 回家参数
-                        q=2,          # 外出参数
+                        q=2,            # 外出参数
                         walk_length=10, # 随机游走最大长度
                         num_walks=800,  # 每个节点作为起始节点生成的随机游走个数
                         workers=4       # 并行线程数
                        )
     
-    model = node2vec.fit(window=3,    # Skip-Gram窗口大小
+    model = node2vec.fit(window=3,     # Skip-Gram窗口大小
                          min_count=1,  # 忽略出现次数低于此阈值的节点（词）
                          batch_words=4 # 每个线程处理的数据量
                         )
@@ -199,9 +195,6 @@ def get_X():
     result=arr[:,1:]
     return result
 
-# node2vec=get_X()
-# node2vec=np.array(node2vec)
-# b_node2vec=node2vec
 node2vec =pd.read_excel('./data/node2vec.xlsx',index_col=0)
 node2vec=np.array(node2vec)
 
@@ -243,13 +236,13 @@ class Actor(nn.Module):
         self.checkpoint_file = os.path.join(chkpt_dir, name + '_')
 
         self.conv1 = nn.Linear(75*16,50*16)
-        # self.conv1.weight.data.normal_(0,0.1) # initialization
+        self.conv1.weight.data.normal_(0,0.1) # initialization
         self.conv2 = nn.Linear(50*16,20*16)
-        # self.conv2.weight.data.normal_(0,0.1) # initialization
-        # self.conv3.weight.data.normal_(0,0.1) # initialization
+        self.conv2.weight.data.normal_(0,0.1) # initialization
+        self.conv3.weight.data.normal_(0,0.1) # initialization
         self.conv3 = nn.Linear(20*16, 10*16)
         self.mu = nn.Linear(10*16, action_dim)
-        # self.conv3.weight.data.normal_(0,0.1) # initialization
+        self.conv3.weight.data.normal_(0,0.1) # initialization
         f3 = 0.003
         nn.init.uniform_(self.mu.weight.data, -f3, f3)
         nn.init.uniform_(self.mu.bias.data, -f3, f3)
